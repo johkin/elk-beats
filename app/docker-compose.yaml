@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  app:
+    image: docker.io/library/elk-beats:0.0.1-SNAPSHOT
+    ports:
+      - 8080:8080
+    labels:
+      co.elastic.logs/enabled: true
+      co.elastic.metrics/module: prometheus
+      co.elastic.metrics/hosts: app:8080
+      co.elastic.metrics/metrics_path: /actuator/prometheus
+      co.elastic.metrics/period: 10s
+      co.elastic.monitor/name: backend
+      co.elastic.monitor/tags: "java, spring-boot"
+      co.elastic.monitor/1.type: icmp
+      co.elastic.monitor/1.hosts: app
+      co.elastic.monitor/1.schedule: "@every 5s"
+      co.elastic.monitor/2.type: http
+      co.elastic.monitor/2.hosts: app:8080/actuator/health
+      co.elastic.monitor/2.schedule: "@every 5s"
+
+#  agent:
+#    depends_on: [ app ]
+#    image: elastic/elastic-agent:${ELASTIC_VERSION}
+#    restart: always
+#    user: root # note, synthetic browser monitors require this set to `elastic-agent`
+#    environment:
+#      - FLEET_ENROLLMENT_TOKEN=S1A0b080TUJRa3ZPcFBkSmkzd0M6LVcxNUtzSDRUYzZRTHhWTDhKN3lRQQ==
+#      - FLEET_ENROLL=1
+#      - FLEET_URL=host.docker.internal:8220
+
+  metricbeat:
+    depends_on: [app]
+    image: elastic/metricbeat:${ELASTIC_VERSION}
+    volumes:
+      - ./metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /proc:/hostfs/proc:ro
+      - /:/hostfs:ro
+    user: root
+
+  heartbeat:
+    depends_on: [app]
+    image: elastic/heartbeat:${ELASTIC_VERSION}
+    volumes:
+      - ./heartbeat/heartbeat.yml:/usr/share/heartbeat/heartbeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    user: root
+
+  filebeat:
+    depends_on: [app]
+    image: elastic/filebeat:${ELASTIC_VERSION}
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    user: root
+
+

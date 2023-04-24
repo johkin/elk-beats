@@ -1,0 +1,22 @@
+management:
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+
+
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus, metrics
+
+spring:
+  application:
+    name: Demo Application
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: info
+    org.springframework: warn

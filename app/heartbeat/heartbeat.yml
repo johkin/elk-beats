@@ -1,0 +1,19 @@
+output.logstash:
+  hosts: ["host.docker.internal:5044"]
+
+
+heartbeat.autodiscover:
+  providers:
+    - type: docker
+      hints.enabled: true
+
+#metricbeat.autodiscover:
+#  providers:
+#    - type: docker
+#      hints.enabled: true
+
+#metricbeat.modules:
+#  - module: prometheus
+#    period: 10s
+#    hosts: [ "app:8080" ]
+#    metrics_path: /actuator/prometheus
